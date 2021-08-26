@@ -47,5 +47,9 @@ extern int bgp_md5_unset(struct peer *);
 extern int bgp_set_socket_ttl(struct peer *, int fd);
 extern int bgp_update_address(struct interface *ifp, const union sockunion *dst,
 			      union sockunion *addr);
+static inline int bgp_tcp_authopt_set(struct peer *peer)
+{
+	return BGP_SUCCESS;
+}
 
 #endif /* _QUAGGA_BGP_NETWORK_H */
