@@ -191,11 +191,11 @@ def teardown_module(mod):
     tgen.stop_topology()
 
 
-def test_tcp_authopt_keychain():
-    tgen = get_topogen()
+def test_tcp_authopt_keychain(tgen):
+    reset_with_new_configs(tgen, "bgpd.conf", "ospfd.conf")
+    check_all_peers_established()
     r1 = tgen.gears["R1"]
     r2 = tgen.gears["R2"]
-    r3 = tgen.gears["R3"]
     out = r1.vtysh_cmd("""
         configure terminal
         key chain aaa
