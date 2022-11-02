@@ -398,7 +398,45 @@ def check_vrf_peer_change_passwords(vrf="", prefix="no"):
     check_all_peers_established(vrf)
 
 
-def test_tcp_authopt_keychain(tgen):
+@pytest.fixture(scope="session")
+def tcp_authopt_sysctl_enabled():
+    from pathlib import Path
+
+    # This needs to be enabled system-wide, it is not namespaced
+    path = Path("/proc/sys/net/ipv4/tcp_authopt")
+    if not path.exists():
+        yield
+    else:
+        if path.exists and path.read_text().strip() == "0":
+            logger.info("Temporarily enabling tcp_authopt")
+            path.write_text("1")
+            yield
+            path.write_text("0")
+        else:
+            yield
+
+
+@pytest.fixture(scope="session")
+def tcp_authopt_available(tcp_authopt_sysctl_enabled):
+    from pathlib import Path
+    import socket
+    import errno
+
+    path = Path("/proc/sys/net/ipv4/tcp_authopt")
+    TCP_AUTHOPT = 38
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        try:
+            optbuf = bytes(4)
+            sock.setsockopt(socket.SOL_TCP, TCP_AUTHOPT, optbuf)
+        except OSError as e:
+            if e.errno == errno.ENOPROTOOPT:
+                pytest.skip("TCP_AUTHOPT not supported by kernel")
+            if e.errno == errno.EPERM:
+                pytest.skip("TCP_AUTHOPT not permitted. Check CAP_NET_ADMIN and system-wide /proc/sys/net/ipv4/tcp_authopt")
+            raise
+
+
+def test_tcp_authopt_keychain(tgen, tcp_authopt_available):
     reset_with_new_configs(tgen, "bgpd.conf", "ospfd.conf")
     check_all_peers_established()
     r1 = tgen.gears["R1"]
