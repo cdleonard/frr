@@ -281,7 +281,6 @@ void tcp_authopt_show_sock(struct vty *vty, int sock)
 	int err = 0;
 
 	err = get_tcp_authopt(sock, &opt);
-	zlog_debug("sock=%d getsockopt TCP_AUTHOPT err=%d", sock, -err);
 	if (err == -ENOPROTOOPT) {
 		vty_out(vty, "TCP Authentication Option not Supported\n");
 		return;
@@ -320,7 +319,6 @@ void tcp_authopt_show_sock_json(struct json_object *json_parent, int sock)
 	jo = json_object_new_object();
 	json_object_object_add(json_parent, "tcp_authopt", jo);
 
-	zlog_debug("sock=%d getsockopt TCP_AUTHOPT err=%d", sock, -err);
 	if (err == -ENOPROTOOPT) {
 		json_object_string_add(jo, "status", "not supported");
 		return;
